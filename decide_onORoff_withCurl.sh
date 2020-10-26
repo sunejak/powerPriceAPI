@@ -5,7 +5,7 @@ if [ -z "$1" ]; then
   exit 1
 fi
 hours=$1
-delta=$((hours * 3600))
+delta=$(echo "scale=0; (${hours} * 3600)/1" | bc )
 #
 if [ -z "$2" ]; then
   echo "Provide a URL"
@@ -13,25 +13,34 @@ if [ -z "$2" ]; then
 fi
 URL=$2
 #
-data=$( curl -fsS -w '%{http_code}' ${URL})
+data=$( curl -fsS -w '%{http_code}' ${URL} > /mnt/ramdisk/tmp.tmp )
 if [ $? -ne 0 ] ; then
   echo "Could not access: ${URL}"
   exit 1;
 fi
 
-peaktime=$( echo ${data} | cut -f1 -d ' ')
+today=$(grep $(date -I) /mnt/ramdisk/tmp.tmp)
+if [ $? -ne 0 ] ; then
+  echo "Could not find data"
+  exit 1;
+fi
+
+peaktime=$( echo $today | cut -f1 -d ' ')
 starttime=$(( peaktime - delta ))
 stoptime=$(( peaktime + delta ))
 #
 now=$(date "+%s")
 #
-echo Time $now window $starttime $stoptime
-# gpio mode 1 output
+# date --date='@123'
+#
+# echo Time window from: $(date --date=@$starttime) to:  $(date --date=@$stoptime)
+gpio mode 1 output
 #
 if [ $now -gt $starttime ] && [ $now -lt $stoptime ]; then
-  echo Inside window $(date)
-#  gpio write 1 1
+  echo Inside window $(date) Time window from: $(date --date=@$starttime) to:  $(date --date=@$stoptime)
+  gpio write 1 1
   else
-  echo Outside window $(date)
-#  gpio write 1 0
+  echo Outside window $(date) Time window from: $(date --date=@$starttime) to:  $(date --date=@$stoptime)
+  gpio write 1 0
 fi
+

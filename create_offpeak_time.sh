@@ -4,6 +4,15 @@ if [ -z "$1" ]; then
   echo "Provide a data input file"
   exit 1
 fi
+# 
+# check if file exist
+#
+if [ -f "$1" ]; then
+  echo "File exist: $1"
+else
+  echo "File does not exist: $1"
+  exit 1
+fi
 #
 # Get the location for data
 #
