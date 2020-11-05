@@ -7,9 +7,7 @@ fi
 # 
 # check if file exist
 #
-if [ -f "$1" ]; then
-  echo "File exist: $1"
-else
+if [ ! -f "$1" ]; then
   echo "File does not exist: $1"
   exit 1
 fi
