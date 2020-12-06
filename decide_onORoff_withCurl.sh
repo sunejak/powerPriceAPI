@@ -34,13 +34,12 @@ now=$(date "+%s")
 # date --date='@123'
 #
 # echo Time window from: $(date --date=@$starttime) to:  $(date --date=@$stoptime)
-gpio mode 1 output
+gpio mode 3 output
 #
 if [ $now -gt $starttime ] && [ $now -lt $stoptime ]; then
   echo Inside window $(date) Time window from: $(date --date=@$starttime) to:  $(date --date=@$stoptime)
-  gpio write 1 1
+  gpio write 3 1
   else
   echo Outside window $(date) Time window from: $(date --date=@$starttime) to:  $(date --date=@$stoptime)
-  gpio write 1 0
+  gpio write 3 0
 fi
-
