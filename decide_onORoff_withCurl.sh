@@ -8,7 +8,7 @@ hours=$1
 delta=$(echo "scale=0; (${hours} * 3600)/1" | bc )
 #
 if [ -z "$2" ]; then
-  echo "Provide a URL"
+  echo "Provide a URL for sunset data"
   exit 1
 fi
 URL=$2
@@ -21,17 +21,15 @@ fi
 
 today=$(grep $(date -I) /mnt/ramdisk/tmp.tmp)
 if [ $? -ne 0 ] ; then
-  echo "Could not find data"
+  echo "Could not find data for today"
   exit 1;
 fi
 
-peaktime=$( echo $today | cut -f1 -d ' ')
+peaktime=$( echo ${today} | cut -f1 -d ' ')
 starttime=$(( peaktime - delta ))
 stoptime=$(( peaktime + delta ))
 #
 now=$(date "+%s")
-#
-# date --date='@123'
 #
 # echo Time window from: $(date --date=@$starttime) to:  $(date --date=@$stoptime)
 gpio mode 3 output
