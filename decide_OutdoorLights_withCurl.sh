@@ -14,21 +14,17 @@ if [ -z "$2" ]; then
   echo "Provide a begin time, when lights can turn on"
   exit 1
 fi
-onMorningTime=$(date --date="$2" "+%s");    # 5:00
+offNightTime=$(date --date="$2" "+%s");    # 1:00
 #
 if [ -z "$3" ]; then
   echo "Provide an end time, when lights must turn off"
   exit 1
 fi
-offEveningTime=$(date --date="$3" "+%s");  # 1:00
+onMorningTime=$(date --date="$3" "+%s");  # 5:00
 #
-midnightToday=$(date -d "0:00 today" "+%s")
-midnightTomorrow=$(date -d "0:00 tomorrow" "+%s")
-
 # fetch sunrise and sunset times, use RAM disk on pi.
-
+#
 tmpfile=/mnt/ramdisk/sun.tmp
-tmpfile=sun.tmp
 
 data=$( curl -fsS -w '%{http_code}' ${URL} > ${tmpfile} )
 if [ $? -ne 0 ] ; then
@@ -42,31 +38,36 @@ if [ $? -ne 0 ] ; then
   exit 1;
 fi
 
-sunsettime=$(echo $today | cut -d ' ' -f4)
-sunrisetime=$(echo $today | cut -d ' ' -f1)
+sunsetTime=$(echo $today | cut -d ' ' -f4)
+sunriseTime=$(echo $today | cut -d ' ' -f1)
 #
 now=$(date "+%s")
 #
-# echo Daylight window from: $(date --date=@$sunrisetime) to:  $(date --date=@$sunsettime)
-# echo On window from: $(date --date=@$begintime) to:  $(date --date=@$endtime)
+# echo Lights time window from: $(date --date=@$offNightTime) to:  $(date --date=@$onMorningTime)
+# echo Daylight window from: $(date --date=@$sunriseTime) to:  $(date --date=@$sunsetTime)
 gpio mode 5 output
-turnOn=false;
+turnOn=0
 
 # keep light on from midnight until given time
-if [  $now -gt $midnightToday ] && [ $now -lt $offEveningTime ] ; then
-  turnOn=true;
+if [ $now -lt $offNightTime ] ; then
+#  echo before 1:00
+  turnOn=1
   fi
 # turn on light in the morning until sunrise
-if [  $now -gt $onMorningTime ] && [ $now -lt $sunrisetime ] ; then
-  turnOn=true;
+if [  $now -gt $onMorningTime ] && [ $now -lt $sunriseTime ] ; then
+  turnOn=1
+#  echo after 5:00 before sunrise
   fi
 # turn on light at sunset
-if [  $now -gt $sunsettime ]  ; then
-  turnOn=true;
+if [  $now -gt $sunsetTime ]  ; then
+  turnOn=1
+#  echo after sunset
   fi
 
-if [  $turnOn ] ; then
+if [  $turnOn -eq 1 ] ; then
+      echo Lights on $now : $offNightTime $onMorningTime $sunriseTime $sunsetTime
       gpio write 5 1
 else
+      echo Lights off $now : $offNightTime $onMorningTime $sunriseTime $sunsetTime
       gpio write 5 0
 fi
